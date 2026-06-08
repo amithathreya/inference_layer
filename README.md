@@ -6,8 +6,8 @@ A lightweight Go-based reverse proxy that exposes an OpenAI-compatible API, forw
 ## TODO
 - CGo interfacing is a pain , migrate to llama_cpp_python
 ## Updated Goals for the project 
+- Slot based KV cache management as sequence level
 - Continious Batching (Scheduler) for concurrent reqs
-- KV cache Management  - ambitious goal to impl PagedAttention
 - Server Side Events (SSE) streaming for the UI 
 - Auth and rate limiter 
 ## Architecture
