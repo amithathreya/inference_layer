@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+
 type BackendInterface interface {
 	ForwardChat(req ChatRequest) (*http.Response, error)
 }

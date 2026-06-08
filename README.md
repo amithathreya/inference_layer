@@ -3,7 +3,13 @@
 A lightweight Go-based reverse proxy that exposes an OpenAI-compatible API, forwarding requests to a locally running llama.cpp server.
 
 ---
-
+## TODO
+- CGo interfacing is a pain , migrate to llama_cpp_python
+## Updated Goals for the project 
+- Continious Batching (Scheduler) for concurrent reqs
+- KV cache Management  - ambitious goal to impl PagedAttention
+- Server Side Events (SSE) streaming for the UI 
+- Auth and rate limiter 
 ## Architecture
 
 ```
@@ -12,7 +18,7 @@ Client (curl / OpenAI SDK / any HTTP client)
         │  POST /v1/chat/completions
         ▼
 ┌──────────────────────────┐
-│  Go Inference Gateway    │  :9090
+│  Py Inference Gateway    │  :9090
 │  (Your Reverse Proxy)    │
 └──────────────────────────┘
         │
@@ -28,8 +34,7 @@ Client (curl / OpenAI SDK / any HTTP client)
 
 ## Prerequisites
 
-- Linux / macOS / Windows
-- Go 1.20+
+- Linux 
 - Git
 - At least 8GB RAM (16GB recommended for 8B model)
 - 6–8 GB free disk space for the model
@@ -153,66 +158,6 @@ Expected: a JSON response with `choices[0].message.content` populated.
 
 ---
 
-## Part 2 — Running the Go Inference Gateway
-
-### Step 1: Clone this repository
-
-```bash
-git clone https://github.com/amithathreya/inference_layer.git
-cd inference_layer
-```
-
-### Step 2: Configure the backend URL
-
-Edit the `main.go` file to set the llama-server URL if it's not running on the default `localhost:8080`:
-
-```go
-llamaBackend := backend.NewLlamaBackend("http://localhost:8080")
-```
-
-### Step 3: Build and run
-
-```bash
-go build -o inference-gateway
-./inference-gateway
-```
-
-The gateway starts on port **9090** by default.
-
-### Step 4: Test through the gateway
-
-```bash
-curl http://localhost:9090/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "llama-3.2-8b",
-    "messages": [
-      {"role": "user", "content": "What is the capital of France?"}
-    ],
-    "stream": false
-  }'
-```
-
-### Step 5: Test with the OpenAI Python SDK
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="http://localhost:9090/v1",
-    api_key="not-needed"
-)
-
-response = client.chat.completions.create(
-    model="llama-3.2-8b",
-    messages=[{"role": "user", "content": "Explain Newton's first law simply."}]
-)
-
-print(response.choices[0].message.content)
-```
-
----
-
 ## Troubleshooting
 
 | Problem | Likely cause | Fix |
@@ -225,17 +170,4 @@ print(response.choices[0].message.content)
 
 ---
 
-## Project Structure
-
-```
-inference_layer/
-├── main.go                    # Entry point, starts the gateway server
-├── go.mod                     # Go module definition
-├── api/
-│   ├── handler.go             # HTTP request handler for /v1/chat/completions
-│   └── types.go               # Request/response data structures
-├── backend/
-│   └── llamacpp.go            # Backend logic to forward to llama.cpp server
-└── README.md
-```
 
